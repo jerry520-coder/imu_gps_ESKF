@@ -17,6 +17,7 @@ ImuProcessor::ImuProcessor(const double acc_noise, const double gyro_noise,
 
 void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, State *state)
 {
+    LOG(INFO) << "Start Predict!";
     // Time.
     const double delta_t = cur_imu->timestamp - last_imu->timestamp;
     const double delta_t2 = delta_t * delta_t;

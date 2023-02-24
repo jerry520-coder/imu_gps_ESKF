@@ -6,6 +6,7 @@
 #include <sensor_msgs/NavSatFix.h>
 
 #include "localization_wrapper.h"
+// namespace plt = matplotlibcpp;
 
 int main(int argc, char **argv)
 {
@@ -20,5 +21,6 @@ int main(int argc, char **argv)
     LocalizationWrapper localizer(nh);
 
     ros::spin();
+
     return 1;
 }

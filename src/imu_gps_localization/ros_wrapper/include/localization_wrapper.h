@@ -8,8 +8,10 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
+#include "matplotlib-cpp/matplotlibcpp.h"
 
 #include "imu_gps_localizer/imu_gps_localizer.h"
+namespace plt = matplotlibcpp;
 
 class LocalizationWrapper
 {

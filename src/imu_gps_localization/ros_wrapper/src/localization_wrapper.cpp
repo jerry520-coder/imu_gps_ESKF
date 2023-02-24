@@ -1,10 +1,7 @@
-#include "localization_wrapper.h"
-
-#include <iomanip>
-
 #include <glog/logging.h>
-
+#include <iomanip>
 #include "imu_gps_localizer/base_type.h"
+#include "localization_wrapper.h"
 
 LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 {
@@ -16,17 +13,20 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
     nh.param("gyro_bias_noise", gyro_bias_noise, 1e-8);
 
     double x, y, z;
-    nh.param("I_p_Gps_x", x, 0.);
-    nh.param("I_p_Gps_y", y, 0.);
-    nh.param("I_p_Gps_z", z, 0.);
+    nh.param("I_p_Gps_x", x, -0.3657); // GPS到IMU有一个外参, 即GPS在IMU坐标系下的位置,即杆臂值
+    nh.param("I_p_Gps_y", y, 0.1850);
+    nh.param("I_p_Gps_z", z, 0.0900);
     const Eigen::Vector3d I_p_Gps(x, y, z);
 
     std::string log_folder = "/home";
     ros::param::get("log_folder", log_folder);
 
     // Log.
-    file_state_.open(log_folder + "/state.csv");
-    file_gps_.open(log_folder + "/gps.csv");
+    // file_state_.open(log_folder + "/state.csv");
+    // file_gps_.open(log_folder + "/gps.csv");
+
+    file_state_.open("/home/binghe/project/gps_to_xyz/state.csv");
+    file_gps_.open("/home/binghe/project/gps_to_xyz/gps.csv");
 
     // Initialization imu gps localizer.
     imu_gps_localizer_ptr_ =
@@ -35,10 +35,11 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
                                                               I_p_Gps);
 
     // Subscribe topics.
-    imu_sub_ = nh.subscribe("/imu/data", 10, &LocalizationWrapper::ImuCallback, this);
-    gps_position_sub_ = nh.subscribe("/fix", 10, &LocalizationWrapper::GpsPositionCallback, this);
+    imu_sub_ = nh.subscribe("/wit_imu", 10, &LocalizationWrapper::ImuCallback, this);
+    gps_position_sub_ = nh.subscribe("/rtk_gnss", 10, &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
+    // namespace plt = matplotlibcpp;
 }
 
 LocalizationWrapper::~LocalizationWrapper()
@@ -76,7 +77,7 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg_pt
 void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr &gps_msg_ptr)
 {
     // Check the gps_status.
-    if (gps_msg_ptr->status.status != 2)
+    if (gps_msg_ptr->status.status != 'A')
     {
         LOG(WARNING) << "[GpsCallBack]: Bad gps message!";
         return;
@@ -97,14 +98,15 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State &state)
 {
     const Eigen::Quaterniond G_q_I(state.G_R_I);
-    file_state_ << std::fixed << std::setprecision(15)
-                << state.timestamp << ","
-                << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
-                << state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2] << ","
-                << state.G_v_I[0] << "," << state.G_v_I[1] << "," << state.G_v_I[2] << ","
-                << G_q_I.x() << "," << G_q_I.y() << "," << G_q_I.z() << "," << G_q_I.w() << ","
-                << state.acc_bias[0] << "," << state.acc_bias[1] << "," << state.acc_bias[2] << ","
-                << state.gyro_bias[0] << "," << state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
+    file_state_ << std::fixed << std::setprecision(8)
+                << state.timestamp << " "
+                << std::fixed << std::setprecision(5)
+                // << state.lla[0] << " " << state.lla[1] << " " << state.lla[2] << " "
+                << state.G_p_I[0] << " " << state.G_p_I[1] << " " << state.G_p_I[2] << " "
+                // << state.G_v_I[0] << " " << state.G_v_I[1] << " " << state.G_v_I[2] << " "
+                << G_q_I.x() << " " << G_q_I.y() << " " << G_q_I.z() << " " << G_q_I.w() << "\n";
+    // << state.acc_bias[0] << " " << state.acc_bias[1] << " " << state.acc_bias[2] << " "
+    // << state.gyro_bias[0] << " " << state.gyro_bias[1] << " " << state.gyro_bias[2] << "\n";
 }
 
 void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data)

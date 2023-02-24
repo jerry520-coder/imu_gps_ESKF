@@ -1,6 +1,7 @@
 #include "imu_gps_localizer/gps_processor.h"
-
 #include "imu_gps_localizer/utils.h"
+
+#include <glog/logging.h>
 
 namespace ImuGpsLocalization
 {
@@ -9,6 +10,7 @@ GpsProcessor::GpsProcessor(const Eigen::Vector3d &I_p_Gps) : I_p_Gps_(I_p_Gps) {
 
 bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d &init_lla, const GpsPositionDataPtr gps_data_ptr, State *state)
 {
+    LOG(WARNING) << "Start Update!";
     Eigen::Matrix<double, 3, 15> H;
     Eigen::Vector3d residual;
     ComputeJacobianAndResidual(init_lla, gps_data_ptr, *state, &H, &residual);

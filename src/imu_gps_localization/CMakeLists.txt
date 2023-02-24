@@ -9,6 +9,10 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
 )
 
+find_package(Python3 COMPONENTS Development NumPy)
+include_directories(${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
+
+
 catkin_package()
 
 add_subdirectory(imu_gps_localizer)
@@ -34,3 +38,8 @@ add_executable(${PROJECT_NAME}_node ros_wrapper/src/localization_node.cpp)
 target_link_libraries(${PROJECT_NAME}_node
   ros_wrapper_lib
 )
+target_link_libraries(${PROJECT_NAME}_node Python3::Python Python3::NumPy)
+
+
+
+
